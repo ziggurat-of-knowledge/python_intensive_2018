@@ -15,18 +15,21 @@ ENEMY_COUNT = 5
 
 BASE_X, BASE_Y = 0, -300
 
+FONT = ("Arial", 14, "bold")
+
 
 class Missile:
 
-    def __init__(self, x, y, color, x2, y2):
+    def __init__(self, x, y, color, x2, y2, bar=True):
         self.color = color
 
         pen = turtle.Turtle(visible=False)
-        pen.speed(0)
+        pen.speed('fastest')
         pen.color(color)
         pen.penup()
         pen.setpos(x=x, y=y)
-        pen.pendown()
+        if bar:
+            pen.pendown()
         heading = pen.towards(x2, y2)
         pen.setheading(heading)
         pen.showturtle()
@@ -38,7 +41,7 @@ class Missile:
 
     def step(self):
         if self.state == 'launched':
-            self.pen.forward(4)
+            self.pen.forward(5)
             if self.pen.distance(x=self.target[0], y=self.target[1]) < 20:
                 self.state = 'explode'
                 self.pen.shape('circle')
@@ -66,6 +69,43 @@ class Missile:
         return self.pen.ycor()
 
 
+class Building:
+
+    def __init__(self, pos, name, health):
+        self.health = health
+        self.name = name
+        self.text_turtle = turtle.Turtle(visible=False)
+
+        building = turtle.Turtle()
+        building.hideturtle()
+        building.penup()
+        building.setpos(*pos)
+        pic_path = os.path.join(BASE_PATH, "images", str(name))
+        window.register_shape(pic_path)
+        building.shape(pic_path)
+        building.showturtle()
+
+        self.building = building
+        self.text_health(pos)
+
+    def text_health(self, text_pos):
+        self.text_turtle.reset()
+        self.text_turtle.hideturtle()
+        self.text_turtle.penup()
+        self.text_turtle.goto(text_pos[0], text_pos[1] - 75)
+        self.text_turtle.write(str(self.health), align="center", font=FONT)
+
+
+class Graphics:
+
+    def __init__(self, pos, text):
+        self.text_turtle = turtle.Turtle(visible=False)
+        self.text_turtle.speed('fastest')
+        self.text_turtle.penup()
+        self.text_turtle.goto(*pos)
+        self.text_turtle.write(text, font=FONT)
+
+
 def fire_missile(x, y):
     info = Missile(color='white', x=BASE_X, y=BASE_Y, x2=x, y2=y)
     our_missiles.append(info)
@@ -74,7 +114,9 @@ def fire_missile(x, y):
 def fire_enemy_missile():
     x = random.randint(-600, 600)
     y = 400
-    info = Missile(color='red', x=x, y=y, x2=BASE_X, y2=BASE_Y)
+    target = [i for i in pos_building.values()]
+    target = random.choice(target)
+    info = Missile(color='red', x=x, y=y, x2=target[0], y2=target[1])
     enemy_missiles.append(info)
 
 
@@ -106,32 +148,41 @@ window.onclick(fire_missile)
 our_missiles = []
 enemy_missiles = []
 
+our_building = []
+pos_building = {'base': (BASE_X, BASE_Y), 'skyscraper': (-200, -300), 'nuclear_1': (250, -300),
+                'nuclear_2': (-320, -300)}
 
-base = turtle.Turtle()
-base.hideturtle()
-base.speed(0)
-base.penup()
-base.setpos(x=BASE_X, y=BASE_Y)
-pic_path = os.path.join(BASE_PATH, "images", "base.gif")
-window.register_shape(pic_path)
-base.shape(pic_path)
-base.showturtle()
-
-base_health = 2000
+base = Building(pos=pos_building['base'], name="base.gif", health=2000)
+skyscraper = Building(pos=pos_building['skyscraper'], name="skyscraper_1.gif", health=1500)
+nuclear_1 = Building(pos=pos_building['nuclear_1'], name="nuclear_1.gif", health=1500)
+nuclear_2 = Building(pos=pos_building['nuclear_2'], name="nuclear_1.gif", health=1400)
 
 
 def game_over():
-    return base_health < 0
+    return base.health < 0
 
 
 def check_impact():
-    global base_health
     for enemy_missile in enemy_missiles:
         if enemy_missile.state != 'explode':
             continue
-        if enemy_missile.distance(BASE_X, BASE_Y) < enemy_missile.radius * 10:
-            base_health -= 100
-            # print('base_health', base_health)
+        if enemy_missile.distance(*pos_building['base']) < enemy_missile.radius * 10:
+            base.health -= 100
+            base.text_health(text_pos=pos_building['base'])
+
+        if enemy_missile.distance(*pos_building['skyscraper']) < enemy_missile.radius * 10:
+            skyscraper.health -= 100
+            nuclear_2.text_health(text_pos=pos_building['skyscraper'])
+
+        if enemy_missile.distance(*pos_building['nuclear_1']) < enemy_missile.radius * 10:
+            nuclear_1.health -= 100
+            nuclear_1.text_health(text_pos=pos_building['nuclear_1'])
+
+        if enemy_missile.distance(*pos_building['nuclear_2']) < enemy_missile.radius * 10:
+            nuclear_2.health -= 100
+            if nuclear_2.health < 800:
+                nuclear_2.name = "nuclear_2.gif"
+            nuclear_2.text_health(text_pos=pos_building['nuclear_2'])
 
 
 while True:
