@@ -1,3 +1,6 @@
+# The work of David
+# работа Давида
+
 import math
 import os
 import random
@@ -20,7 +23,7 @@ FONT = ("Arial", 14, "bold")
 
 class Missile:
 
-    def __init__(self, x, y, color, x2, y2, bar=True):
+    def __init__(self, x, y, color, x2, y2, trace=True):
         self.color = color
 
         pen = turtle.Turtle(visible=False)
@@ -28,7 +31,7 @@ class Missile:
         pen.color(color)
         pen.penup()
         pen.setpos(x=x, y=y)
-        if bar:
+        if trace:
             pen.pendown()
         heading = pen.towards(x2, y2)
         pen.setheading(heading)
@@ -73,26 +76,26 @@ class Building:
 
     def __init__(self, pos, name, health):
         self.health = health
-        self.name = name
+        self.text_pos = pos
         self.text_turtle = turtle.Turtle(visible=False)
 
         building = turtle.Turtle()
         building.hideturtle()
         building.penup()
         building.setpos(*pos)
-        pic_path = os.path.join(BASE_PATH, "images", str(name))
+        pic_path = os.path.join(BASE_PATH, "images", name)
         window.register_shape(pic_path)
         building.shape(pic_path)
         building.showturtle()
 
         self.building = building
-        self.text_health(pos)
+        self.text_health()
 
-    def text_health(self, text_pos):
+    def text_health(self):
         self.text_turtle.reset()
         self.text_turtle.hideturtle()
         self.text_turtle.penup()
-        self.text_turtle.goto(text_pos[0], text_pos[1] - 75)
+        self.text_turtle.goto(self.text_pos[0], self.text_pos[1] - 75)
         self.text_turtle.write(str(self.health), align="center", font=FONT)
 
 
@@ -114,7 +117,7 @@ def fire_missile(x, y):
 def fire_enemy_missile():
     x = random.randint(-600, 600)
     y = 400
-    target = [i for i in pos_building.values()]
+    target = [i for i in buildings.values()]
     target = random.choice(target)
     info = Missile(color='red', x=x, y=y, x2=target[0], y2=target[1])
     enemy_missiles.append(info)
@@ -149,13 +152,18 @@ our_missiles = []
 enemy_missiles = []
 
 our_building = []
-pos_building = {'base': (BASE_X, BASE_Y), 'skyscraper': (-200, -300), 'nuclear_1': (250, -300),
-                'nuclear_2': (-320, -300)}
 
-base = Building(pos=pos_building['base'], name="base.gif", health=2000)
-skyscraper = Building(pos=pos_building['skyscraper'], name="skyscraper_1.gif", health=1500)
-nuclear_1 = Building(pos=pos_building['nuclear_1'], name="nuclear_1.gif", health=1500)
-nuclear_2 = Building(pos=pos_building['nuclear_2'], name="nuclear_1.gif", health=1400)
+buildings = {
+    'base': (BASE_X, BASE_Y),
+    'skyscraper': (-200, -300),
+    'nuclear1': (250, -300),
+    'nuclear2': (-320, -300),
+}
+
+base = Building(pos=buildings['base'], name='base.gif', health=2000)
+skyscraper = Building(pos=buildings['skyscraper'], name='skyscraper_1.gif', health=1500)
+nuclear_1 = Building(pos=buildings['nuclear1'], name='nuclear_1.gif', health=1450)
+nuclear_2 = Building(pos=buildings['nuclear2'], name='nuclear_1.gif', health=1550)
 
 
 def game_over():
@@ -166,23 +174,22 @@ def check_impact():
     for enemy_missile in enemy_missiles:
         if enemy_missile.state != 'explode':
             continue
-        if enemy_missile.distance(*pos_building['base']) < enemy_missile.radius * 10:
+
+        if enemy_missile.distance(*buildings['base']) < enemy_missile.radius * 10:
             base.health -= 100
-            base.text_health(text_pos=pos_building['base'])
+            base.text_health()
 
-        if enemy_missile.distance(*pos_building['skyscraper']) < enemy_missile.radius * 10:
+        if enemy_missile.distance(*buildings['skyscraper']) < enemy_missile.radius * 10:
             skyscraper.health -= 100
-            nuclear_2.text_health(text_pos=pos_building['skyscraper'])
+            skyscraper.text_health()
 
-        if enemy_missile.distance(*pos_building['nuclear_1']) < enemy_missile.radius * 10:
+        if enemy_missile.distance(*buildings['nuclear1']) < enemy_missile.radius * 10:
             nuclear_1.health -= 100
-            nuclear_1.text_health(text_pos=pos_building['nuclear_1'])
+            nuclear_1.text_health()
 
-        if enemy_missile.distance(*pos_building['nuclear_2']) < enemy_missile.radius * 10:
+        if enemy_missile.distance(*buildings['nuclear2']) < enemy_missile.radius * 10:
             nuclear_2.health -= 100
-            if nuclear_2.health < 800:
-                nuclear_2.name = "nuclear_2.gif"
-            nuclear_2.text_health(text_pos=pos_building['nuclear_2'])
+            nuclear_2.text_health()
 
 
 while True:
