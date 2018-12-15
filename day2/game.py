@@ -7,18 +7,15 @@ import random
 import turtle
 
 BASE_PATH = os.path.dirname(os.path.dirname(__file__))
+ENEMY_COUNT = 5
+BASE_X, BASE_Y = 0, -300
+FONT = ("Arial", 14, "bold")
 
 window = turtle.Screen()
 window.setup(1200 + 3, 800 + 3)
-window.bgpic(os.path.join(BASE_PATH, "images", "background.png"))
 window.screensize(1200, 800)
+window.bgpic(os.path.join(BASE_PATH, "images", "background.png"))
 window.tracer(n=2)
-
-ENEMY_COUNT = 5
-
-BASE_X, BASE_Y = 0, -300
-
-FONT = ("Arial", 14, "bold")
 
 
 class Missile:
